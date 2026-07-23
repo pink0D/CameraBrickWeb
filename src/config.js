@@ -38,13 +38,15 @@ function mergeApiResponse(defaults, raw) {
  * Vite build-time defaults. Remote values take precedence.
  * If VITE_CONFIG_URL is not set, resolves immediately with Vite defaults.
  *
- * Returns { config, loading }
+ * Returns { config, loading, error }
  *   config  — always a fully-populated object (never null)
  *   loading — true only while the remote fetch is in flight
+ *   error   — true when VITE_CONFIG_URL is set and the remote fetch fails
  */
 export function useAppConfig() {
   const [config,  setConfig]  = useState(VITE_DEFAULTS)
   const [loading, setLoading] = useState(!!CONFIG_URL)
+  const [error,   setError]   = useState(false)
 
   useEffect(() => {
     if (!CONFIG_URL) return
@@ -61,6 +63,7 @@ export function useAppConfig() {
       })
       .catch(err => {
         console.error('App config: fetch failed, using Vite defaults.', err)
+        if (!cancelled) setError(true)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -69,5 +72,5 @@ export function useAppConfig() {
     return () => { cancelled = true }
   }, []) // run once on mount
 
-  return { config, loading }
+  return { config, loading, error }
 }

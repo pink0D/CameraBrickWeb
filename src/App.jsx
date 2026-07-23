@@ -6,7 +6,7 @@ import { useGamepad } from './gamepad'
 const CONTROLS_TIMEOUT = 3000
 
 export default function App() {
-  const { config, loading } = useAppConfig()
+  const { config, loading, error: configError } = useAppConfig()
 
   const [playing, setPlaying] = useState(false)
   const [error, setError] = useState(false)
@@ -101,6 +101,16 @@ export default function App() {
 
   // Block rendering until remote config is resolved so all URLs are correct
   if (loading) return null
+
+  if (configError) {
+    return (
+      <div className="container">
+        <div className="error">
+          <p>Error loading configuration</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container" onClick={playing ? showControls : undefined}>
