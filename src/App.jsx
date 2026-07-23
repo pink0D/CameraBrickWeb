@@ -158,7 +158,7 @@ export default function App() {
             title={fps != null ? `FPS: ${fps}` : 'FPS: —'}
             aria-label={fps != null ? `Frames per second: ${fps}` : 'Frames per second: unknown'}
           >
-            <span className="fps-value">{fps != null ? fps : '—'}</span>
+            <span className="fps-value">{fps != null ? fps : '0'}</span>
           </div>
           {/* Gamepad connection indicator — only visible when gamepad is enabled */}
           {config.gamepadEnabled && (
