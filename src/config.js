@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react'
 
 // ── Vite build-time defaults (lowest priority) ────────────────────────────────
-const STREAM_HOST = import.meta.env.VITE_STREAM_HOST || window.location.hostname
-const STREAM_PORT = import.meta.env.VITE_STREAM_PORT || 8080
-
 const VITE_DEFAULTS = {
-  streamUrl:      `http://${STREAM_HOST}:${STREAM_PORT}/stream`,
+  streamUrl:      import.meta.env.VITE_STREAM_URL || `http://${window.location.hostname}:8080/stream`,
   settingsUrl:    import.meta.env.VITE_SETTINGS_URL    || '',
-  gamepadEnabled: import.meta.env.VITE_GAMEPAD_ENABLED === 'true',
+  gamepadEnabled: import.meta.env.VITE_GAMEPAD_ENABLED === 'false',
   gamepadWsUrl:   import.meta.env.VITE_GAMEPAD_WS_URL  || '',
 }
 
