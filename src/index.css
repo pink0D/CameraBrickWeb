@@ -1,0 +1,91 @@
+/* Reset & base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  /* Use dvh for mobile browsers that account for address bar */
+  height: 100dvh;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* Fullscreen container */
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  /* Respect safe areas (notch, home indicator on iOS) */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Centered Play/Stop control */
+.control {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(2px);
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.control:hover,
+.control:active {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.control.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* The MJPEG stream image */
+.stream.hidden {
+  visibility: hidden;
+}
+
+.stream {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  /* Prevent image drag on touch */
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+/* Error / offline state */
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #333;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 1rem;
+}
+
