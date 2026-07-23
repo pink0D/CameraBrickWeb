@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import NoSleep from 'nosleep.js'
 import { useAppConfig } from './config'
-import { useGamepad } from './gamepad'
+import { useWebsocket } from './websocket'
 
 const CONTROLS_TIMEOUT = 3000
 
@@ -15,9 +15,9 @@ export default function App() {
   const hideTimerRef = useRef(null)
 
   // Gamepad support — driven entirely by runtime config
-  const { gamepadConnected, gamepadPrompt, wifiLevel } = useGamepad({
-    enabled: config.gamepadEnabled,
-    wsUrl:   config.gamepadWsUrl,
+  const { gamepadConnected, gamepadPrompt, wifiLevel, fps } = useWebsocket({
+    gamepadEnabled: config.gamepadEnabled,
+    websocketUrl:   config.websocketUrl,
     playing,
   })
 
@@ -136,10 +136,10 @@ export default function App() {
         </div>
       )}
 
-      {/* Status indicators — top-left corner, only while polling */}
-      {config.gamepadEnabled && playing && (
+      {/* Status indicators — top-left corner, shown whenever video is playing */}
+      {playing && (
         <>
-          {/* WiFi signal indicator */}
+          {/* WiFi signal indicator — always visible while playing (WebSocket is always connected) */}
           <div
             className={`wifi-indicator${wifiLevel ? ` wifi-indicator--${wifiLevel}` : ''}`}
             title={wifiLevel ? `WiFi signal: ${wifiLevel}` : 'WiFi signal: unknown'}
@@ -152,17 +152,27 @@ export default function App() {
               <circle cx="12" cy="20" r="1"/>
             </svg>
           </div>
-          {/* Gamepad connection indicator */}
+          {/* FPS indicator — between wifi and gamepad */}
           <div
-            className={`gamepad-indicator${gamepadConnected ? ' gamepad-indicator--on' : ''}`}
-            title={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
-            aria-label={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+            className="fps-indicator"
+            title={fps != null ? `FPS: ${fps}` : 'FPS: —'}
+            aria-label={fps != null ? `Frames per second: ${fps}` : 'Frames per second: unknown'}
           >
-            {/* 4-way move icon */}
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3-3M2 12h20M12 2v20"/>
-            </svg>
+            <span className="fps-value">{fps != null ? fps : '—'}</span>
           </div>
+          {/* Gamepad connection indicator — only visible when gamepad is enabled */}
+          {config.gamepadEnabled && (
+            <div
+              className={`gamepad-indicator${gamepadConnected ? ' gamepad-indicator--on' : ''}`}
+              title={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+              aria-label={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+            >
+              {/* 4-way move icon */}
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3-3M2 12h20M12 2v20"/>
+              </svg>
+            </div>
+          )}
         </>
       )}
 

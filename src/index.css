@@ -137,10 +137,35 @@ html, body, #root {
   color: #4ade80; /* green-400 */
 }
 
-/* Gamepad connection indicator — top-left corner, below WiFi */
-.gamepad-indicator {
+/* FPS indicator — top-left corner, between WiFi and gamepad */
+.fps-indicator {
   position: absolute;
   top: calc(62px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.fps-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Gamepad connection indicator — top-left corner, below FPS */
+.gamepad-indicator {
+  position: absolute;
+  top: calc(112px + env(safe-area-inset-top));
   left: calc(12px + env(safe-area-inset-left));
   display: flex;
   align-items: center;

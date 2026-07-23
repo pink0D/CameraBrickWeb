@@ -5,7 +5,7 @@ const VITE_DEFAULTS = {
   streamUrl:      import.meta.env.VITE_STREAM_URL || `http://${window.location.hostname}:8080/stream`,
   settingsUrl:    import.meta.env.VITE_SETTINGS_URL    || '',
   gamepadEnabled: import.meta.env.VITE_GAMEPAD_ENABLED === 'true',
-  gamepadWsUrl:   import.meta.env.VITE_GAMEPAD_WS_URL  || '',
+  websocketUrl:   import.meta.env.VITE_WEBSOCKET_URL  || '',
 }
 
 // URL of the remote config REST endpoint (optional)
@@ -17,7 +17,7 @@ const CONFIG_URL = import.meta.env.VITE_CONFIG_URL || ''
  *   {
  *     "stream_url":      "http://host:port/path",
  *     "settings_url":    "http://host:port/path",
- *     "gamepad_ws_url":  "ws://host:port/path",
+ *     "websocket_url":   "ws://host:port/path",
  *     "gamepad_enabled": true
  *   }
  * Any key absent from the response keeps its Vite default value.
@@ -26,7 +26,7 @@ function mergeApiResponse(defaults, raw) {
   const out = { ...defaults }
   if (raw.stream_url      != null) out.streamUrl      = String(raw.stream_url)
   if (raw.settings_url    != null) out.settingsUrl    = String(raw.settings_url)
-  if (raw.gamepad_ws_url  != null) out.gamepadWsUrl   = String(raw.gamepad_ws_url)
+  if (raw.websocket_url   != null) out.websocketUrl   = String(raw.websocket_url)
   if (raw.gamepad_enabled != null) out.gamepadEnabled = Boolean(raw.gamepad_enabled)
   return out
 }
