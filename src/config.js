@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 const VITE_DEFAULTS = {
   streamUrl:      import.meta.env.VITE_STREAM_URL || `http://${window.location.hostname}:8080/stream`,
   settingsUrl:    import.meta.env.VITE_SETTINGS_URL    || '',
-  gamepadEnabled: import.meta.env.VITE_GAMEPAD_ENABLED === 'false',
+  gamepadEnabled: import.meta.env.VITE_GAMEPAD_ENABLED || 'false',
   gamepadWsUrl:   import.meta.env.VITE_GAMEPAD_WS_URL  || '',
 }
 
