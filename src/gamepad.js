@@ -3,23 +3,38 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 const PROMPT_TIMEOUT_MS = 10_000
 
 /**
+ * Evaluate WiFi signal level from RSSI value (dBm).
+ * Returns one of: 'good', 'fair', 'poor', 'none'
+ */
+function evalWifiLevel(rssi) {
+  if (rssi == null || Number.isNaN(rssi)) return null
+  if (rssi >= -60) return 'good'
+  if (rssi >= -75) return 'fair'
+  if (rssi >= -85) return 'poor'
+  return 'none'
+}
+
+/**
  * useGamepad({ enabled, wsUrl, playing })
  *
- * Manages HTML5 Gamepad API polling, the "click a button" prompt, and
- * forwarding gamepad data over a WebSocket — all tied to video playback.
+ * Manages HTML5 Gamepad API polling, the "click a button" prompt,
+ * forwarding gamepad data over a WebSocket, and receiving incoming
+ * WebSocket messages (e.g. RSSI) — all tied to video playback.
  *
  * Parameters:
  *   enabled {boolean}  – whether gamepad support is active (from config)
- *   wsUrl   {string}   – WebSocket URL for sending gamepad data (from config)
+ *   wsUrl   {string}   – WebSocket URL for gamepad/RSSI data (from config)
  *   playing {boolean}  – whether video playback is active
  *
  * Returns:
  *   gamepadConnected {boolean}               – gamepad visible to the browser
  *   gamepadPrompt   {null|'initial'|'retry'} – which prompt message to show
+ *   wifiLevel       {null|'good'|'fair'|'poor'|'none'} – WiFi signal level
  */
 export function useGamepad({ enabled, wsUrl, playing }) {
   const [gamepadConnected, setGamepadConnected] = useState(false)
   const [gamepadPrompt, setGamepadPrompt]       = useState(null)
+  const [wifiLevel, setWifiLevel]               = useState(null)
 
   // Refs shared between the polling loop and event handlers
   const wsRef            = useRef(null)   // active WebSocket
@@ -81,10 +96,31 @@ export function useGamepad({ enabled, wsUrl, playing }) {
   useEffect(() => {
     if (!enabled || !playing) return
 
+    // Reset WiFi level when playback starts
+    setWifiLevel(null)
+
     // Open WebSocket
     if (wsUrl) {
       try {
-        wsRef.current = new WebSocket(wsUrl)
+        const ws = new WebSocket(wsUrl)
+        wsRef.current = ws
+
+        // ── Incoming WS messages (e.g. WiFi RSSI) ───────────────────────
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            // Try several common keys for RSSI
+            const rssi = data.rssi ?? data.RSSI ?? data.signal ?? data.Signal
+            if (rssi != null) {
+              const r = Number(rssi)
+              if (!Number.isNaN(r)) {
+                setWifiLevel(evalWifiLevel(r))
+              }
+            }
+          } catch (_) {
+            // Ignore non-JSON or malformed messages
+          }
+        }
       } catch (err) {
         console.error('Gamepad WS: failed to open', err)
       }
@@ -158,6 +194,7 @@ export function useGamepad({ enabled, wsUrl, playing }) {
       cancelAnimationFrame(rafId)
       clearTimeout(promptTimer)
       setGamepadPrompt(null)
+      setWifiLevel(null)
       hasDataRef.current       = false
       lastTimestampRef.current = 0
       // Keep gamepadIndexRef so we reuse the same gamepad on next play
@@ -166,5 +203,5 @@ export function useGamepad({ enabled, wsUrl, playing }) {
     }
   }, [enabled, wsUrl, playing, updateConnected])
 
-  return { gamepadConnected, gamepadPrompt }
+  return { gamepadConnected, gamepadPrompt, wifiLevel }
 }

@@ -102,10 +102,45 @@ html, body, #root {
   background: rgba(0, 0, 0, 0.65);
 }
 
-/* Gamepad connection indicator — top-left corner */
-.gamepad-indicator {
+/* WiFi signal indicator — top-left corner, above gamepad */
+.wifi-indicator {
   position: absolute;
   top: calc(12px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #9ca3af; /* gray-400 — unknown */
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  transition: color 0.3s, background 0.3s;
+  pointer-events: none;
+}
+
+/* Red — poor / no signal */
+.wifi-indicator--poor,
+.wifi-indicator--none {
+  color: #f87171; /* red-400 */
+}
+
+/* Yellow — fair signal */
+.wifi-indicator--fair {
+  color: #facc15; /* yellow-400 */
+}
+
+/* Green — good signal */
+.wifi-indicator--good {
+  color: #4ade80; /* green-400 */
+}
+
+/* Gamepad connection indicator — top-left corner, below WiFi */
+.gamepad-indicator {
+  position: absolute;
+  top: calc(62px + env(safe-area-inset-top));
   left: calc(12px + env(safe-area-inset-left));
   display: flex;
   align-items: center;

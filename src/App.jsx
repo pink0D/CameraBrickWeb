@@ -15,7 +15,7 @@ export default function App() {
   const hideTimerRef = useRef(null)
 
   // Gamepad support — driven entirely by runtime config
-  const { gamepadConnected, gamepadPrompt } = useGamepad({
+  const { gamepadConnected, gamepadPrompt, wifiLevel } = useGamepad({
     enabled: config.gamepadEnabled,
     wsUrl:   config.gamepadWsUrl,
     playing,
@@ -136,18 +136,34 @@ export default function App() {
         </div>
       )}
 
-      {/* Gamepad connection status indicator — top-left corner, only while polling */}
+      {/* Status indicators — top-left corner, only while polling */}
       {config.gamepadEnabled && playing && (
-        <div
-          className={`gamepad-indicator${gamepadConnected ? ' gamepad-indicator--on' : ''}`}
-          title={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
-          aria-label={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
-        >
-          {/* Generic gamepad icon */}
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
-            <path d="M17 6H7C3.69 6 1 8.69 1 12s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm-9 7H7v1a1 1 0 0 1-2 0v-1H4a1 1 0 0 1 0-2h1v-1a1 1 0 0 1 2 0v1h1a1 1 0 0 1 0 2zm7 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm2-2a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-          </svg>
-        </div>
+        <>
+          {/* WiFi signal indicator */}
+          <div
+            className={`wifi-indicator${wifiLevel ? ` wifi-indicator--${wifiLevel}` : ''}`}
+            title={wifiLevel ? `WiFi signal: ${wifiLevel}` : 'WiFi signal: unknown'}
+            aria-label={wifiLevel ? `WiFi signal: ${wifiLevel}` : 'WiFi signal: unknown'}
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <circle cx="12" cy="20" r="1"/>
+            </svg>
+          </div>
+          {/* Gamepad connection indicator */}
+          <div
+            className={`gamepad-indicator${gamepadConnected ? ' gamepad-indicator--on' : ''}`}
+            title={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+            aria-label={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+          >
+            {/* 4-way move icon */}
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3-3M2 12h20M12 2v20"/>
+            </svg>
+          </div>
+        </>
       )}
 
       <button
