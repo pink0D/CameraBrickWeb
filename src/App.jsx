@@ -1,22 +1,25 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import NoSleep from 'nosleep.js'
-
-// VITE_STREAM_HOST / VITE_STREAM_PORT can be set in .env.local or via the shell:
-//   VITE_STREAM_HOST=192.168.1.10 VITE_STREAM_PORT=8080 npm run dev
-// If not set, HOST defaults to the page's hostname and PORT defaults to 8080.
-const STREAM_HOST = import.meta.env.VITE_STREAM_HOST || window.location.hostname
-const STREAM_PORT = import.meta.env.VITE_STREAM_PORT || 8080
-
-const STREAM_URL = `http://${STREAM_HOST}:${STREAM_PORT}/stream`
+import { useAppConfig } from './config'
+import { useGamepad } from './gamepad'
 
 const CONTROLS_TIMEOUT = 3000
 
 export default function App() {
+  const { config, loading } = useAppConfig()
+
   const [playing, setPlaying] = useState(false)
   const [error, setError] = useState(false)
   const [controlsVisible, setControlsVisible] = useState(false)
   const noSleepRef = useRef(null)
   const hideTimerRef = useRef(null)
+
+  // Gamepad support — driven entirely by runtime config
+  const { gamepadConnected, gamepadPrompt } = useGamepad({
+    enabled: config.gamepadEnabled,
+    wsUrl:   config.gamepadWsUrl,
+    playing,
+  })
 
   useEffect(() => {
     noSleepRef.current = new NoSleep()
@@ -96,10 +99,13 @@ export default function App() {
   // When stopped, the Play button is always visible.
   const buttonShown = !playing || controlsVisible
 
+  // Block rendering until remote config is resolved so all URLs are correct
+  if (loading) return null
+
   return (
     <div className="container" onClick={playing ? showControls : undefined}>
       <img
-        src={playing ? STREAM_URL : ''}
+        src={playing ? config.streamUrl : ''}
         alt="Camera stream"
         className={`stream${!playing ? ' hidden' : ''}`}
         onError={handleError}
@@ -108,6 +114,29 @@ export default function App() {
       {error && (
         <div className="error">
           <p>Stream unavailable</p>
+        </div>
+      )}
+
+      {/* Gamepad "click a button" prompt — shown above the video frame */}
+      {config.gamepadEnabled && gamepadPrompt && (
+        <div className="gamepad-prompt">
+          {gamepadPrompt === 'initial'
+            ? 'Click any button on the gamepad'
+            : 'Ensure the controller is listed in connected Bluetooth devices, then click any button on the gamepad'}
+        </div>
+      )}
+
+      {/* Gamepad connection status indicator — top-left corner, only while polling */}
+      {config.gamepadEnabled && playing && (
+        <div
+          className={`gamepad-indicator${gamepadConnected ? ' gamepad-indicator--on' : ''}`}
+          title={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+          aria-label={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+        >
+          {/* Generic gamepad icon */}
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+            <path d="M17 6H7C3.69 6 1 8.69 1 12s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm-9 7H7v1a1 1 0 0 1-2 0v-1H4a1 1 0 0 1 0-2h1v-1a1 1 0 0 1 2 0v1h1a1 1 0 0 1 0 2zm7 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm2-2a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+          </svg>
         </div>
       )}
 
@@ -129,6 +158,21 @@ export default function App() {
           </svg>
         )}
       </button>
+
+      {config.settingsUrl && (
+        <button
+          className="settings-btn"
+          onClick={(e) => {
+            e.stopPropagation()
+            window.location.href = config.settingsUrl
+          }}
+          aria-label="Settings"
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.01 7.01 0 0 0-1.62-.94l-.36-2.54A.484.484 0 0 0 14 2h-4c-.25 0-.46.18-.49.42l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.48.48 0 0 0-.59.22L2.63 8.48a.48.48 0 0 0 .12.61l2.03 1.58C4.74 11.36 4.72 11.67 4.72 12s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.37 1.04.7 1.62.94l.36 2.54c.05.24.26.42.49.42h4c.25 0 .46-.18.49-.42l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
