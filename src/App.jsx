@@ -122,7 +122,7 @@ export default function App() {
         <div className="gamepad-prompt">
           {gamepadPrompt === 'initial'
             ? 'Click any button on the gamepad'
-            : 'Ensure the controller is listed in connected Bluetooth devices, then click any button on the gamepad'}
+            : <>Ensure the Bluetooth controller is paired and connected.<br />Then click any button on the gamepad</>}
         </div>
       )}
 
