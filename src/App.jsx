@@ -15,7 +15,7 @@ export default function App() {
   const hideTimerRef = useRef(null)
 
   // Gamepad support — driven entirely by runtime config
-  const { gamepadConnected, gamepadPrompt, wifiLevel, fps } = useWebsocket({
+  const { gamepadConnected, gamepadPrompt, wifiLevel, fps, voltage, lowVoltage } = useWebsocket({
     gamepadEnabled: config.gamepadEnabled,
     websocketUrl:   config.websocketUrl,
     playing,
@@ -160,6 +160,16 @@ export default function App() {
           >
             <span className="fps-value">{fps != null ? fps : '0'}</span>
           </div>
+          {/* Voltage indicator — between FPS and gamepad, only visible after first value received */}
+          {voltage != null && (
+            <div
+              className={`voltage-indicator${lowVoltage ? ' voltage-indicator--low' : ''}`}
+              title={`Battery voltage: ${voltage.toFixed(1)}V${lowVoltage ? ' (LOW)' : ''}`}
+              aria-label={`Battery voltage: ${voltage.toFixed(1)} volts${lowVoltage ? ', low voltage warning' : ''}`}
+            >
+              <span className="voltage-value">{voltage.toFixed(1)}V</span>
+            </div>
+          )}
           {/* Gamepad connection indicator — only visible when gamepad is enabled */}
           {config.gamepadEnabled && (
             <div

@@ -162,10 +162,46 @@ html, body, #root {
   line-height: 1;
 }
 
-/* Gamepad connection indicator — top-left corner, below FPS */
-.gamepad-indicator {
+/* Voltage indicator — top-left corner, between FPS and gamepad */
+.voltage-indicator {
   position: absolute;
   top: calc(112px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.voltage-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Low-voltage warning — red background, blinking */
+.voltage-indicator--low {
+  color: #f87171; /* red-400 */
+  animation: voltage-blink 500ms step-end infinite;
+}
+
+@keyframes voltage-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Gamepad connection indicator — top-left corner, below voltage */
+.gamepad-indicator {
+  position: absolute;
+  top: calc(162px + env(safe-area-inset-top));
   left: calc(12px + env(safe-area-inset-left));
   display: flex;
   align-items: center;

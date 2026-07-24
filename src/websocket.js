@@ -36,12 +36,16 @@ function evalWifiLevel(rssi) {
  *   gamepadPrompt   {null|'initial'|'retry'} – which prompt message to show
  *   wifiLevel       {null|'good'|'fair'|'poor'|'none'} – WiFi signal level
  *   fps             {null|number}                       – Frames per second from the device
+ *   voltage         {null|number}                       – Battery voltage (fractional), null until first received
+ *   lowVoltage      {boolean}                           – Low-voltage warning flag
  */
 export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
   const [gamepadConnected, setGamepadConnected] = useState(false)
   const [gamepadPrompt, setGamepadPrompt]       = useState(null)
   const [wifiLevel, setWifiLevel]               = useState(null)
   const [fps, setFps]                           = useState(null)
+  const [voltage, setVoltage]                   = useState(null) // null = not yet received, number = fractional voltage
+  const [lowVoltage, setLowVoltage]             = useState(false)
 
   // Refs shared between the polling loop and event handlers
   const fpsStaleTimerRef = useRef(null)  // timer to reset fps to 0 after 5 s of no updates
@@ -65,9 +69,11 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
   useEffect(() => {
     if (!playing || !websocketUrl) return
 
-    // Reset WiFi level and FPS when playback starts
+    // Reset WiFi level, FPS and voltage when playback starts
     setWifiLevel(null)
     setFps(null)
+    setVoltage(null)
+    setLowVoltage(false)
 
     let ws
     try {
@@ -96,6 +102,16 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
               fpsStaleTimerRef.current = setTimeout(() => setFps(0), 5000)
             }
           }
+          const v = data.voltage
+          if (v != null) {
+            const n = Number(v)
+            if (!Number.isNaN(n)) {
+              setVoltage(n)
+            }
+          }
+          if (data.low_voltage_flag != null) {
+            setLowVoltage(!!data.low_voltage_flag)
+          }
         } catch (_) {
           // Ignore non-JSON or malformed messages
         }
@@ -109,6 +125,8 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
       clearTimeout(fpsStaleTimerRef.current)
       setWifiLevel(null)
       setFps(null)
+      setVoltage(null)
+      setLowVoltage(false)
       wsRef.current = null
       if (ws) {
         ws.close()
@@ -233,5 +251,5 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
     }
   }, [gamepadEnabled, playing, updateConnected])
 
-  return { gamepadConnected, gamepadPrompt, wifiLevel, fps }
+  return { gamepadConnected, gamepadPrompt, wifiLevel, fps, voltage, lowVoltage }
 }
