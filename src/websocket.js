@@ -15,6 +15,57 @@ function evalWifiLevel(rssi) {
 }
 
 /**
+ * Encode a Gamepad object into a binary ArrayBuffer (little-endian, for ESP32).
+ *
+ * Layout:
+ *   [ 0..7 ]   float64 LE   – gamepad.timestamp
+ *   [ 8..23]   4 × float32 LE – axes 0..3 (missing axes → 0.0)
+ *   [24..31]   2 × float32 LE – button[6].value, button[7].value (missing → 0.0)
+ *   [32..33]   uint16 LE     – bitmask: bit[i] = button[i].pressed ? 1 : 0
+ *   [34..N]    UTF-8 bytes   – gamepad.id
+ */
+function encodeGamepadBinary(gp) {
+  const textEncoder = new TextEncoder()
+  const idBytes = textEncoder.encode(gp.id)
+  const buf = new ArrayBuffer(34 + idBytes.byteLength)
+  const dv = new DataView(buf)
+  let offset = 0
+
+  // 1. timestamp — float64, little-endian
+  dv.setFloat64(offset, gp.timestamp, true)
+  offset += 8
+
+  // 2. axes 0..3 — float32, little-endian (pad missing with 0.0)
+  for (let i = 0; i < 4; i++) {
+    dv.setFloat32(offset, gp.axes[i] ?? 0.0, true)
+    offset += 4
+  }
+
+  // 3. button[6].value, button[7].value — float32, little-endian
+  const b6val = gp.buttons[6]?.value ?? 0.0
+  const b7val = gp.buttons[7]?.value ?? 0.0
+  dv.setFloat32(offset, b6val, true)
+  offset += 4
+  dv.setFloat32(offset, b7val, true)
+  offset += 4
+
+  // 4. 16-bit button pressed bitmask (little-endian)
+  let mask = 0
+  for (let i = 0; i < 16 && i < gp.buttons.length; i++) {
+    if (gp.buttons[i].pressed) {
+      mask |= (1 << i)
+    }
+  }
+  dv.setUint16(offset, mask, true)
+  offset += 2
+
+  // 5. gamepad id — raw UTF-8 bytes
+  new Uint8Array(buf, offset).set(idBytes)
+
+  return buf
+}
+
+/**
  * useWebsocket({ gamepadEnabled, websocketUrl, playing })
  *
  * Manages a WebSocket connection (always open while video is playing),
@@ -217,21 +268,9 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
           setGamepadPrompt(null)
         }
 
-        // Forward to WebSocket, mirroring the Gamepad JS object structure
+        // Forward to WebSocket in binary format (little-endian for ESP32)
         if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({
-            id:        gp.id,
-            index:     gp.index,
-            connected: gp.connected,
-            timestamp: gp.timestamp,
-            mapping:   gp.mapping,
-            axes:      Array.from(gp.axes),
-            buttons:   Array.from(gp.buttons).map(b => ({
-              pressed: b.pressed,
-              touched: b.touched,
-              value:   b.value,
-            })),
-          }))
+          wsRef.current.send(encodeGamepadBinary(gp))
         }
       }
 
