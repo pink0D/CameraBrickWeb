@@ -76,8 +76,8 @@ export default function App() {
     clearTimeout(hideTimerRef.current)
     // Both must be called within the click gesture
     noSleepRef.current.enable().catch(() => {})
-    requestFullscreen()
-  }, [requestFullscreen])
+    if (config.fullscreenEnabled) requestFullscreen()
+  }, [requestFullscreen, config.fullscreenEnabled])
 
   const stop = useCallback(() => {
     setPlaying(false)
@@ -85,8 +85,8 @@ export default function App() {
     setControlsVisible(false)
     clearTimeout(hideTimerRef.current)
     noSleepRef.current.disable()
-    exitFullscreen()
-  }, [exitFullscreen])
+    if (config.fullscreenEnabled) exitFullscreen()
+  }, [exitFullscreen, config.fullscreenEnabled])
 
   const handleError = useCallback(() => {
     // Ignore the error fired when src is set to '' on stop

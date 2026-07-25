@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 
 // ── Vite build-time defaults (lowest priority) ────────────────────────────────
 const VITE_DEFAULTS = {
-  streamUrl:      import.meta.env.VITE_STREAM_URL || `http://${window.location.hostname}:8080/stream`,
-  settingsUrl:    import.meta.env.VITE_SETTINGS_URL    || '',
-  gamepadEnabled: import.meta.env.VITE_GAMEPAD_ENABLED === 'true',
-  websocketUrl:   import.meta.env.VITE_WEBSOCKET_URL  || '',
+  streamUrl:         import.meta.env.VITE_STREAM_URL || `http://${window.location.hostname}:8080/stream`,
+  settingsUrl:       import.meta.env.VITE_SETTINGS_URL    || '',
+  gamepadEnabled:    import.meta.env.VITE_GAMEPAD_ENABLED === 'true',
+  websocketUrl:      import.meta.env.VITE_WEBSOCKET_URL  || '',
+  fullscreenEnabled: import.meta.env.VITE_FULLSCREEN_ENABLED !== 'false',
 }
 
 // URL of the remote config REST endpoint (optional)
@@ -24,10 +25,11 @@ const CONFIG_URL = import.meta.env.VITE_CONFIG_URL || ''
  */
 function mergeApiResponse(defaults, raw) {
   const out = { ...defaults }
-  if (raw.stream_url      != null) out.streamUrl      = String(raw.stream_url)
-  if (raw.settings_url    != null) out.settingsUrl    = String(raw.settings_url)
-  if (raw.websocket_url   != null) out.websocketUrl   = String(raw.websocket_url)
-  if (raw.gamepad_enabled != null) out.gamepadEnabled = Boolean(raw.gamepad_enabled)
+  if (raw.stream_url         != null) out.streamUrl         = String(raw.stream_url)
+  if (raw.settings_url       != null) out.settingsUrl       = String(raw.settings_url)
+  if (raw.websocket_url      != null) out.websocketUrl      = String(raw.websocket_url)
+  if (raw.gamepad_enabled    != null) out.gamepadEnabled    = Boolean(raw.gamepad_enabled)
+  if (raw.fullscreen_enabled != null) out.fullscreenEnabled = Boolean(raw.fullscreen_enabled)
   return out
 }
 
