@@ -134,6 +134,13 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
       ws = new WebSocket(websocketUrl)
       wsRef.current = ws
 
+      // ── Ping interval: send "ping:" + performance.now() every 1000 ms ───
+      const pingInterval = setInterval(() => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.send(`ping:${performance.now()}`)
+        }
+      }, 1000)
+
       // ── Incoming WS messages (e.g. WiFi RSSI) ──────────────────────────
       ws.onmessage = (event) => {
         try {
@@ -160,7 +167,8 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
           if (pingVal != null) {
             const pn = Number(pingVal)
             if (!Number.isNaN(pn)) {
-              setPing(pn)
+              const rtt = Math.round(performance.now() - pn)
+              setPing(rtt)
               clearTimeout(pingStaleTimerRef.current)
               pingStaleTimerRef.current = setTimeout(() => setPing(0), 5000)
             }
@@ -185,6 +193,7 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
 
     // ── Cleanup (called when playing → false or on unmount) ────────────────
     return () => {
+      clearInterval(pingInterval)
       clearTimeout(fpsStaleTimerRef.current)
       clearTimeout(pingStaleTimerRef.current)
       setWifiLevel(null)
