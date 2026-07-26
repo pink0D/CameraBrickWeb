@@ -86,6 +86,8 @@ export default function App() {
     clearTimeout(hideTimerRef.current)
     noSleepRef.current.disable()
     if (config.fullscreenEnabled) exitFullscreen()
+    // Force a page reload to ensure no WebSocket connections are left open
+    window.location.reload()
   }, [exitFullscreen, config.fullscreenEnabled])
 
   const handleError = useCallback(() => {
