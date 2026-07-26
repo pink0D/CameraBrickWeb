@@ -95,12 +95,14 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
   const [gamepadPrompt, setGamepadPrompt]       = useState(null)
   const [wifiLevel, setWifiLevel]               = useState(null)
   const [fps, setFps]                           = useState(null)
+  const [ping, setPing]                         = useState(null)
   const [voltage, setVoltage]                   = useState(null) // null = not yet received, number = fractional voltage
   const [lowVoltage, setLowVoltage]             = useState(false)
 
   // Refs shared between the polling loop and event handlers
-  const fpsStaleTimerRef = useRef(null)  // timer to reset fps to 0 after 5 s of no updates
-  const wsRef            = useRef(null)   // active WebSocket
+  const fpsStaleTimerRef  = useRef(null)  // timer to reset fps to 0 after 5 s of no updates
+  const pingStaleTimerRef = useRef(null)  // timer to reset ping to 0 after 5 s of no updates
+  const wsRef             = useRef(null)   // active WebSocket
   const gamepadIndexRef  = useRef(null)   // index of the first gamepad we've locked onto
   const lastTimestampRef = useRef(0)      // last gp.timestamp we processed
   const hasDataRef       = useRef(false)  // have we received any gamepad data this session?
@@ -120,9 +122,10 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
   useEffect(() => {
     if (!playing || !websocketUrl) return
 
-    // Reset WiFi level, FPS and voltage when playback starts
+    // Reset WiFi level, FPS, ping and voltage when playback starts
     setWifiLevel(null)
     setFps(null)
+    setPing(null)
     setVoltage(null)
     setLowVoltage(false)
 
@@ -153,6 +156,15 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
               fpsStaleTimerRef.current = setTimeout(() => setFps(0), 5000)
             }
           }
+          const pingVal = data.ping
+          if (pingVal != null) {
+            const pn = Number(pingVal)
+            if (!Number.isNaN(pn)) {
+              setPing(pn)
+              clearTimeout(pingStaleTimerRef.current)
+              pingStaleTimerRef.current = setTimeout(() => setPing(0), 5000)
+            }
+          }
           const v = data.voltage
           if (v != null) {
             const n = Number(v)
@@ -174,8 +186,10 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
     // ── Cleanup (called when playing → false or on unmount) ────────────────
     return () => {
       clearTimeout(fpsStaleTimerRef.current)
+      clearTimeout(pingStaleTimerRef.current)
       setWifiLevel(null)
       setFps(null)
+      setPing(null)
       setVoltage(null)
       setLowVoltage(false)
       wsRef.current = null
@@ -290,5 +304,5 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
     }
   }, [gamepadEnabled, playing, updateConnected])
 
-  return { gamepadConnected, gamepadPrompt, wifiLevel, fps, voltage, lowVoltage }
+  return { gamepadConnected, gamepadPrompt, wifiLevel, fps, ping, voltage, lowVoltage }
 }

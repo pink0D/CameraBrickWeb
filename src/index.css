@@ -142,9 +142,6 @@ html, body, #root {
   position: absolute;
   top: calc(62px + env(safe-area-inset-top));
   left: calc(12px + env(safe-area-inset-left));
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -157,15 +154,67 @@ html, body, #root {
 }
 
 .fps-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 0.875rem;
   font-weight: 700;
   line-height: 1;
 }
 
-/* Voltage indicator — top-left corner, between FPS and gamepad */
-.voltage-indicator {
+.fps-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.5rem;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+/* Ping indicator — top-left corner, between FPS and voltage */
+.ping-indicator {
   position: absolute;
   top: calc(112px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.ping-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ping-label {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.5rem;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+/* Voltage indicator — top-left corner, between ping and gamepad */
+.voltage-indicator {
+  position: absolute;
+  top: calc(162px + env(safe-area-inset-top));
   left: calc(12px + env(safe-area-inset-left));
   display: flex;
   align-items: center;
@@ -201,7 +250,7 @@ html, body, #root {
 /* Gamepad connection indicator — top-left corner, below voltage */
 .gamepad-indicator {
   position: absolute;
-  top: calc(162px + env(safe-area-inset-top));
+  top: calc(212px + env(safe-area-inset-top));
   left: calc(12px + env(safe-area-inset-left));
   display: flex;
   align-items: center;
