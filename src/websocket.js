@@ -130,17 +130,30 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
     setLowVoltage(false)
 
     let ws
+    let pingInterval
     try {
       ws = new WebSocket(websocketUrl)
       wsRef.current = ws
 
+      ws.onopen = () => {
+        console.log('WS: connected')
+      }
+
+      ws.onerror = (err) => {
+        console.error('WS: error', err)
+      }
+
+      ws.onclose = (e) => {
+        console.log('WS: closed', e.code, e.reason)
+      }
+
       // ── Ping interval: send binary "ping:<timestamp>" every 1000 ms ──────
       const pingTextEncoder = new TextEncoder()
-      const pingInterval = setInterval(() => {
+      pingInterval = setInterval(() => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
           const pingStr = `ping:${performance.now()}`
           const pingBytes = pingTextEncoder.encode(pingStr)
-          wsRef.current.send(pingBytes.buffer)
+          wsRef.current.send(pingBytes)
         }
       }, 1000)
 
