@@ -239,7 +239,7 @@ html, body, #root {
 /* Low-voltage warning — red background, blinking */
 .voltage-indicator--low {
   color: #f87171; /* red-400 */
-  animation: voltage-blink 500ms step-end infinite;
+  animation: voltage-blink 1000ms step-end infinite;
 }
 
 @keyframes voltage-blink {

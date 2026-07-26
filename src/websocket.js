@@ -183,7 +183,7 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
           if (pingVal != null) {
             const pn = Number(pingVal)
             if (!Number.isNaN(pn)) {
-              const rtt = Math.round(performance.now() - pn)
+              const rtt = Math.round((performance.now() - pn) / 2)
               setPing(rtt)
               clearTimeout(pingStaleTimerRef.current)
               pingStaleTimerRef.current = setTimeout(() => setPing(0), 5000)
