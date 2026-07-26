@@ -104,7 +104,6 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
   const pingStaleTimerRef = useRef(null)  // timer to reset ping to 0 after 5 s of no updates
   const wsRef             = useRef(null)   // active WebSocket
   const gamepadIndexRef  = useRef(null)   // index of the first gamepad we've locked onto
-  const lastTimestampRef = useRef(0)      // last gp.timestamp we processed
   const hasDataRef       = useRef(false)  // have we received any gamepad data this session?
   const connectedRef     = useRef(false)  // shadow of gamepadConnected (avoids stale closures)
 
@@ -269,7 +268,6 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
 
     // Reset per-session state and show the initial prompt
     hasDataRef.current       = false
-    lastTimestampRef.current = 0
     setGamepadPrompt('initial')
 
     // After 10 s without any input, escalate the prompt
@@ -296,10 +294,7 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
       // Keep the connection indicator in sync with what the poll sees
       updateConnected(gp != null)
 
-      // Only act when the browser reports genuinely new data (timestamp changed)
-      if (gp && gp.timestamp !== lastTimestampRef.current) {
-        lastTimestampRef.current = gp.timestamp
-
+      if (gp) {
         // First data received → hide the prompt
         if (!hasDataRef.current) {
           hasDataRef.current = true
@@ -307,7 +302,8 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
           setGamepadPrompt(null)
         }
 
-        // Forward to WebSocket with "data:" prefix (binary, little-endian for ESP32)
+        // Forward to WebSocket with "data:" prefix on every poll (binary, little-endian for ESP32)
+        // Always send so that the full state is pushed even when there were no changes
         if (wsRef.current?.readyState === WebSocket.OPEN) {
           const textEncoder = new TextEncoder()
           const prefix = textEncoder.encode('data:')
@@ -330,7 +326,6 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
       clearTimeout(promptTimer)
       setGamepadPrompt(null)
       hasDataRef.current       = false
-      lastTimestampRef.current = 0
       // Keep gamepadIndexRef so we reuse the same gamepad on next play
     }
   }, [gamepadEnabled, playing, updateConnected])
