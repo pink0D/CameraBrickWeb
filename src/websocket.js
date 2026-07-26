@@ -291,9 +291,15 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
           setGamepadPrompt(null)
         }
 
-        // Forward to WebSocket in binary format (little-endian for ESP32)
+        // Forward to WebSocket with "data:" prefix (binary, little-endian for ESP32)
         if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(encodeGamepadBinary(gp))
+          const textEncoder = new TextEncoder()
+          const prefix = textEncoder.encode('data:')
+          const gamepadBin = encodeGamepadBinary(gp)
+          const combined = new Uint8Array(prefix.byteLength + gamepadBin.byteLength)
+          combined.set(prefix, 0)
+          combined.set(new Uint8Array(gamepadBin), prefix.byteLength)
+          wsRef.current.send(combined.buffer)
         }
       }
 
