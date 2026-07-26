@@ -134,10 +134,13 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
       ws = new WebSocket(websocketUrl)
       wsRef.current = ws
 
-      // ── Ping interval: send "ping:" + performance.now() every 1000 ms ───
+      // ── Ping interval: send binary "ping:<timestamp>" every 1000 ms ──────
+      const pingTextEncoder = new TextEncoder()
       const pingInterval = setInterval(() => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(`ping:${performance.now()}`)
+          const pingStr = `ping:${performance.now()}`
+          const pingBytes = pingTextEncoder.encode(pingStr)
+          wsRef.current.send(pingBytes.buffer)
         }
       }, 1000)
 
