@@ -184,9 +184,11 @@ function main() {
 
   // Find the index file (index.html or index.html.gz) for the "/" route
   let rootIndex = -1;
+  let rootCountAdded = 0;
   for (let i = 0; i < fileData.length; i++) {
     if (fileData[i].displayName === 'index.html' || fileData[i].displayName === 'index.html.gz') {
       rootIndex = i;
+      rootCountAdded = 1;
       break;
     }
   }
@@ -218,7 +220,7 @@ function main() {
   cpp += '\n';
 
   // File count convenience constant
-  cpp += `static const size_t ${prefix}files_count = ${fileData.length};\n`;
+  cpp += `static const size_t ${prefix}files_count = ${fileData.length + rootCountAdded};\n`;
 
   // Write output – filename uses prefix (without trailing underscore)
   const filePrefix = prefixArg.endsWith('_') ? prefixArg.slice(0, -1) : prefixArg;
