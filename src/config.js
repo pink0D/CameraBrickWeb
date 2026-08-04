@@ -7,6 +7,7 @@ const VITE_DEFAULTS = {
   gamepadEnabled:    import.meta.env.VITE_GAMEPAD_ENABLED === 'true',
   websocketUrl:      import.meta.env.VITE_WEBSOCKET_URL  || '',
   fullscreenEnabled: import.meta.env.VITE_FULLSCREEN_ENABLED !== 'false',
+  rotation:          parseInt(import.meta.env.VITE_IMG_ROTATION, 10) || 0,
 }
 
 // URL of the remote config REST endpoint (optional)
@@ -30,6 +31,10 @@ function mergeApiResponse(defaults, raw) {
   if (raw.websocket_url      != null) out.websocketUrl      = String(raw.websocket_url)
   if (raw.gamepad_enabled    != null) out.gamepadEnabled    = Boolean(raw.gamepad_enabled)
   if (raw.fullscreen_enabled != null) out.fullscreenEnabled = Boolean(raw.fullscreen_enabled)
+  if (raw.rotation != null) {
+    const r = parseInt(raw.rotation, 10)
+    if ([0, 90, 180, 270].includes(r)) out.rotation = r
+  }
   return out
 }
 

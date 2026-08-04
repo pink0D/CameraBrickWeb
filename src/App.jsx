@@ -114,14 +114,22 @@ export default function App() {
     )
   }
 
-  return (
-    <div className="container" onClick={playing ? showControls : undefined}>
-      <img
-        src={playing ? config.streamUrl : ''}
-        alt="Camera stream"
-        className={`stream${!playing ? ' hidden' : ''}`}
-        onError={handleError}
-      />
+    const rotation = config.rotation
+    const isVertical = rotation === 90 || rotation === 270
+
+    return (
+      <div className="container" onClick={playing ? showControls : undefined}>
+        <img
+          src={playing ? config.streamUrl : ''}
+          alt="Camera stream"
+          className={`stream${!playing ? ' hidden' : ''}`}
+          style={
+            isVertical
+              ? { transform: `rotate(${rotation}deg)`, width: '100vh', height: '100vw', objectFit: 'contain' }
+              : { transform: `rotate(${rotation}deg)` }
+          }
+          onError={handleError}
+        />
 
       {error && (
         <div className="error">
@@ -140,7 +148,7 @@ export default function App() {
 
       {/* Status indicators — top-left corner, shown whenever video is playing */}
       {playing && (
-        <>
+        <div className="status-bar">
           {/* WiFi signal indicator — always visible while playing (WebSocket is always connected) */}
           <div
             className={`wifi-indicator${wifiLevel ? ` wifi-indicator--${wifiLevel}` : ''}`}
@@ -154,6 +162,19 @@ export default function App() {
               <circle cx="12" cy="20" r="1"/>
             </svg>
           </div>
+          {/* Gamepad connection indicator — only visible when gamepad is enabled */}
+          {config.gamepadEnabled && (
+            <div
+              className={`gamepad-indicator${gamepadConnected ? ' gamepad-indicator--on' : ''}`}
+              title={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+              aria-label={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
+            >
+              {/* 4-way move icon */}
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3-3M2 12h20M12 2v20"/>
+              </svg>
+            </div>
+          )}
           {/* FPS indicator — between wifi and gamepad */}
           <div
             className="fps-indicator"
@@ -182,20 +203,7 @@ export default function App() {
               <span className="voltage-value">{voltage.toFixed(1)}V</span>
             </div>
           )}
-          {/* Gamepad connection indicator — only visible when gamepad is enabled */}
-          {config.gamepadEnabled && (
-            <div
-              className={`gamepad-indicator${gamepadConnected ? ' gamepad-indicator--on' : ''}`}
-              title={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
-              aria-label={gamepadConnected ? 'Gamepad connected' : 'Gamepad disconnected'}
-            >
-              {/* 4-way move icon */}
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M5 9l-3 3 3 3M19 9l3 3-3 3M9 5l3-3 3 3M9 19l3 3 3-3M2 12h20M12 2v20"/>
-              </svg>
-            </div>
-          )}
-        </>
+        </div>
       )}
 
       <button

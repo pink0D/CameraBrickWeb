@@ -192,7 +192,9 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
           if (v != null) {
             const n = Number(v)
             if (!Number.isNaN(n)) {
-              setVoltage(n)
+              if (n>0) {
+                setVoltage(n)
+              }
             }
           }
           if (data.low_voltage_flag != null) {
