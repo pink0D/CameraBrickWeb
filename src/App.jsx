@@ -15,7 +15,7 @@ export default function App() {
   const hideTimerRef = useRef(null)
 
   // Gamepad support — driven entirely by runtime config
-  const { gamepadConnected, gamepadPrompt, wifiLevel, fps, ping, voltage, lowVoltage } = useWebsocket({
+  const { gamepadConnected, gamepadPrompt, wifiLevel, fps, ping, voltage, lowVoltage, wsRef } = useWebsocket({
     gamepadEnabled: config.gamepadEnabled,
     websocketUrl:   config.websocketUrl,
     playing,
@@ -86,9 +86,19 @@ export default function App() {
     clearTimeout(hideTimerRef.current)
     noSleepRef.current.disable()
     if (config.fullscreenEnabled) exitFullscreen()
+
+    // Send "stop" message over the WebSocket, then close the connection
+    const ws = wsRef.current
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send('stop')
+      ws.close()
+    }
+
     // Force a page reload to ensure no WebSocket connections are left open
-    window.location.reload()
-  }, [exitFullscreen, config.fullscreenEnabled])
+    if (config.reloadOnStop) {
+      window.location.reload()
+    }
+  }, [exitFullscreen, config.fullscreenEnabled, config.reloadOnStop, wsRef])
 
   const handleError = useCallback(() => {
     // Ignore the error fired when src is set to '' on stop

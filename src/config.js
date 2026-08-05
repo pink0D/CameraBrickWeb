@@ -8,6 +8,7 @@ const VITE_DEFAULTS = {
   websocketUrl:      import.meta.env.VITE_WEBSOCKET_URL  || '',
   fullscreenEnabled: import.meta.env.VITE_FULLSCREEN_ENABLED !== 'false',
   rotation:          parseInt(import.meta.env.VITE_IMG_ROTATION, 10) || 0,
+  reloadOnStop:      import.meta.env.VITE_RELOAD_ON_STOP === 'true',
 }
 
 // URL of the remote config REST endpoint (optional)

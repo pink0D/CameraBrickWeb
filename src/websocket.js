@@ -89,6 +89,7 @@ function encodeGamepadBinary(gp) {
  *   fps             {null|number}                       – Frames per second from the device
  *   voltage         {null|number}                       – Battery voltage (fractional), null until first received
  *   lowVoltage      {boolean}                           – Low-voltage warning flag
+ *   wsRef           {React.RefObject}                   – Reference to the active WebSocket
  */
 export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
   const [gamepadConnected, setGamepadConnected] = useState(false)
@@ -332,5 +333,5 @@ export function useWebsocket({ gamepadEnabled, websocketUrl, playing }) {
     }
   }, [gamepadEnabled, playing, updateConnected])
 
-  return { gamepadConnected, gamepadPrompt, wifiLevel, fps, ping, voltage, lowVoltage }
+  return { gamepadConnected, gamepadPrompt, wifiLevel, fps, ping, voltage, lowVoltage, wsRef }
 }
