@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "gzip -9 dist/index.html && npm run build:esp32",
+    "postbuild": "npm run build:esp32",
     "build:esp32": "node scripts/build-esp32.js app_camera",
     "preview": "vite preview"
   },

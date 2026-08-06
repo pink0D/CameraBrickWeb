@@ -79,7 +79,7 @@ export default function App() {
     if (config.fullscreenEnabled) requestFullscreen()
   }, [requestFullscreen, config.fullscreenEnabled])
 
-  const stop = useCallback(() => {
+  const stop = useCallback(({ skipReload = false } = {}) => {
     setPlaying(false)
     setError(false)
     setControlsVisible(false)
@@ -95,7 +95,7 @@ export default function App() {
     }
 
     // Force a page reload to ensure no WebSocket connections are left open
-    if (config.reloadOnStop) {
+    if (config.reloadOnStop && !skipReload) {
       window.location.reload()
     }
   }, [exitFullscreen, config.fullscreenEnabled, config.reloadOnStop, wsRef])
@@ -240,6 +240,9 @@ export default function App() {
           className="settings-btn"
           onClick={(e) => {
             e.stopPropagation()
+            if (playing) {
+              stop({ skipReload: true })
+            }
             window.location.href = config.settingsUrl
           }}
           aria-label="Settings"

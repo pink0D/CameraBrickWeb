@@ -4,7 +4,7 @@
  *
  * Data structure:
  *
- *   struct file_data {
+ *   struct web_file_data {
  *       const char* file_name;
  *       size_t      content_size;
  *       const char* content_type;
@@ -15,14 +15,11 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, '..');
+const appDir = process.cwd();
 
-const distDir = path.join(rootDir, 'dist');
-const outDir = path.join(rootDir, 'dist-esp32');
+const distDir = path.join(appDir, 'dist');
+const outDir = path.join(appDir, 'dist-esp32');
 
 // ---- CLI parameter: prefix for global variable names ----------------------
 // Usage: node scripts/build-esp32.js [prefix]
@@ -30,6 +27,16 @@ const outDir = path.join(rootDir, 'dist-esp32');
 const prefixArg = process.argv[2] || '';
 // Add trailing underscore for variable names if not already present
 const globalPrefix = prefixArg && !prefixArg.endsWith('_') ? prefixArg + '_' : prefixArg;
+
+// ---- CLI parameter: base path for file URLs ---------------------------------
+// Usage: node scripts/build-esp32.js [prefix] [basePath]
+// Example: node scripts/build-esp32.js myapp /app   → all file_name values are prefixed with /app
+const basePathRaw = process.argv[3] || '';
+let basePath = '';
+if (basePathRaw) {
+  basePath = '/' + basePathRaw.replace(/^\/+|\/+$/g, '');
+  basePath = basePath.replace(/\/+/g, '/');
+}
 
 // ---- MIME type helper (returns a string constant name) --------------------
 
@@ -162,16 +169,23 @@ function main() {
   // Struct definition with include guard
   cpp += '#ifndef FILE_DATA_STRUCT_DEFINED\n';
   cpp += '#define FILE_DATA_STRUCT_DEFINED\n';
-  cpp += 'struct file_data {\n';
+  cpp += '\n';
+  cpp += 'struct web_file_data {\n';
   cpp += '    const char*     file_name;\n';
   cpp += '    size_t          content_size;\n';
   cpp += '    const char*     content_type;\n';
   cpp += '    const char*     content_encoding;\n';
   cpp += '    const uint8_t*  content;\n';
   cpp += '};\n';
+  cpp += '\n';
+  cpp += 'struct web_data {\n';
+  cpp += '    const web_file_data* files;\n';
+  cpp += '    size_t               count;\n';
+  cpp += '};\n';
+  cpp += '\n';
   cpp += '#endif // FILE_DATA_STRUCT_DEFINED\n';
   cpp += '\n';
-
+  
   // Per-file content byte arrays
   const prefix = globalPrefix;
   for (let i = 0; i < fileData.length; i++) {
@@ -193,23 +207,46 @@ function main() {
     }
   }
 
-  // Master array of file_data
-  cpp += `static const file_data ${prefix}files[] = {\n`;
+  // Master array of web_file_data
+  cpp += `static const web_file_data ${prefix}files[] = {\n`;
   // Explicit "/" entry pointing to index.html (or index.html.gz) content
   if (rootIndex >= 0) {
     const fi = fileData[rootIndex];
-    cpp += '    {\n';
-    cpp += '        "/",\n';
-    cpp += `        ${fi.contentSize},\n`;
-    cpp += `        "${fi.contentType}",\n`;
-    cpp += `        ${fi.contentEncoding},\n`;
-    cpp += `        ${prefix}file_${rootIndex}_content,\n`;
-    cpp += '    },\n';
-  }
+
+    // If basePath is specified, add both /basePath and /basePath/ entries
+    if (basePath) {
+      rootCountAdded = 2;
+      cpp += '    {\n';
+      cpp += `        "${basePath}",\n`;
+      cpp += `        ${fi.contentSize},\n`;
+      cpp += `        "${fi.contentType}",\n`;
+      cpp += `        ${fi.contentEncoding},\n`;
+      cpp += `        ${prefix}file_${rootIndex}_content,\n`;
+      cpp += '    },\n';
+      cpp += '    {\n';
+      cpp += `        "${basePath}/",\n`;
+      cpp += `        ${fi.contentSize},\n`;
+      cpp += `        "${fi.contentType}",\n`;
+      cpp += `        ${fi.contentEncoding},\n`;
+      cpp += `        ${prefix}file_${rootIndex}_content,\n`;
+      cpp += '    },\n';
+    } else {
+      rootCountAdded = 1;
+      cpp += '    {\n';
+      cpp += '        "/",\n';
+      cpp += `        ${fi.contentSize},\n`;
+      cpp += `        "${fi.contentType}",\n`;
+      cpp += `        ${fi.contentEncoding},\n`;
+      cpp += `        ${prefix}file_${rootIndex}_content,\n`;
+      cpp += '    },\n';
+    }
+  } 
+
+
   for (let i = 0; i < fileData.length; i++) {
     const fd = fileData[i];
     cpp += '    {\n';
-    cpp += `        "/${fd.displayName}",\n`;
+    cpp += `        "${basePath}/${fd.displayName}",\n`;
     cpp += `        ${fd.contentSize},\n`;
     cpp += `        "${fd.contentType}",\n`;
     cpp += `        ${fd.contentEncoding},\n`;
@@ -221,6 +258,11 @@ function main() {
 
   // File count convenience constant
   cpp += `static const size_t ${prefix}files_count = ${fileData.length + rootCountAdded};\n`;
+  cpp += '\n';
+  cpp += `static const web_data ${prefix}web_data = {\n`;
+  cpp += `    ${prefix}files,\n`;
+  cpp += `    ${prefix}files_count,\n`;
+  cpp += '};\n';
 
   // Write output – filename uses prefix (without trailing underscore)
   const filePrefix = prefixArg.endsWith('_') ? prefixArg.slice(0, -1) : prefixArg;
@@ -231,6 +273,9 @@ function main() {
   console.log(`  ${fileData.length} file(s) embedded`);
   if (globalPrefix) {
     console.log(`  Global prefix: "${globalPrefix}"`);
+  }
+  if (basePath) {
+    console.log(`  Base path: "${basePath}"`);
   }
 }
 
