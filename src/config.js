@@ -9,6 +9,7 @@ const VITE_DEFAULTS = {
   fullscreenEnabled: import.meta.env.VITE_FULLSCREEN_ENABLED !== 'false',
   rotation:          parseInt(import.meta.env.VITE_IMG_ROTATION, 10) || 0,
   reloadOnStop:      import.meta.env.VITE_RELOAD_ON_STOP === 'true',
+  tokenUrl:          import.meta.env.VITE_TOKEN_URL || `http://${window.location.hostname}/token`,
 }
 
 // URL of the remote config REST endpoint (optional)
@@ -36,6 +37,7 @@ function mergeApiResponse(defaults, raw) {
     const r = parseInt(raw.rotation, 10)
     if ([0, 90, 180, 270].includes(r)) out.rotation = r
   }
+  if (raw.token_url != null) out.tokenUrl = String(raw.token_url)
   return out
 }
 

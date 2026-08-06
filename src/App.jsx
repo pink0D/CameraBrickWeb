@@ -11,6 +11,8 @@ export default function App() {
   const [playing, setPlaying] = useState(false)
   const [error, setError] = useState(false)
   const [controlsVisible, setControlsVisible] = useState(false)
+  const [token, setToken] = useState(null)
+  const [fetchingToken, setFetchingToken] = useState(false)
   const noSleepRef = useRef(null)
   const hideTimerRef = useRef(null)
 
@@ -71,12 +73,34 @@ export default function App() {
 
   const play = useCallback(() => {
     setError(false)
-    setPlaying(true)
     setControlsVisible(false)
     clearTimeout(hideTimerRef.current)
     // Both must be called within the click gesture
     noSleepRef.current.enable().catch(() => {})
     if (config.fullscreenEnabled) requestFullscreen()
+
+    // Token URL comes from config (VITE_TOKEN_URL or /config JSON merge)
+    const tokenUrl = config.tokenUrl
+
+    // Fetch a fresh token before starting playback
+    setFetchingToken(true)
+    fetch(tokenUrl)
+      .then(r => {
+        if (!r.ok) throw new Error(`Token fetch failed: ${r.status}`)
+        return r.json()
+      })
+      .then(data => {
+        if (data.token) {
+          setToken(data.token)
+        }
+      })
+      .catch(err => {
+        console.warn('Token fetch failed, starting stream without token.', err)
+      })
+      .finally(() => {
+        setFetchingToken(false)
+        setPlaying(true)
+      })
   }, [requestFullscreen, config.fullscreenEnabled])
 
   const stop = useCallback(({ skipReload = false } = {}) => {
@@ -130,7 +154,7 @@ export default function App() {
     return (
       <div className="container" onClick={playing ? showControls : undefined}>
         <img
-          src={playing ? config.streamUrl : ''}
+          src={playing ? (token ? `${config.streamUrl}?token=${token}` : config.streamUrl) : ''}
           alt="Camera stream"
           className={`stream${!playing ? ' hidden' : ''}`}
           style={
